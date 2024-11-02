@@ -1,4 +1,5 @@
 ﻿using Azure.Core;
+using Microsoft.Azure.Cosmos;
 
 namespace AzureXConnect.Models;
 
@@ -12,6 +13,8 @@ public class CosmosDbAccountOptions
     public string AccountName { get; set; } = string.Empty;
 
     public IEnumerable<CosmosDbDatabase> Databases { get; set; } = [];
+
+    public CosmosClientOptions? CosmosClientOptions { get; set; }
 
     public TokenCredential? Credential { get; set; }
 

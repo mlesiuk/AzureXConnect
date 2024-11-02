@@ -11,7 +11,8 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddCosmosDbRepositories(
         this IServiceCollection serviceCollection,
-        Action<CosmosDbAccountOptions> options)
+        Action<CosmosDbAccountOptions> options,
+        Assembly assembly)
     {
         var cosmosDbAccountOptions = new CosmosDbAccountOptions();
         options.Invoke(cosmosDbAccountOptions);
@@ -25,13 +26,18 @@ public static class DependencyInjection
         {
             if (!string.IsNullOrEmpty(cosmosDbAccountOptions.ConnectionString))
             {
-                return new CosmosClient(cosmosDbAccountOptions.ConnectionString);
+                return new CosmosClient(
+                    cosmosDbAccountOptions.ConnectionString,
+                    cosmosDbAccountOptions.CosmosClientOptions);
             }
             else
             {
                 if (cosmosDbAccountOptions.Credential != null && !string.IsNullOrEmpty(cosmosDbAccountOptions.AccountName))
                 {
-                    return new CosmosClient($"https://{cosmosDbAccountOptions.AccountName}.documents.azure.com:443/", cosmosDbAccountOptions.Credential);
+                    return new CosmosClient(
+                        $"https://{cosmosDbAccountOptions.AccountName}.documents.azure.com:443/",
+                        cosmosDbAccountOptions.Credential,
+                        cosmosDbAccountOptions.CosmosClientOptions);
                 }
                 else
                 {
@@ -52,7 +58,7 @@ public static class DependencyInjection
                     continue;
                 }
 
-                var serviceDescriptor = Assembly.GetExecutingAssembly().DefinedTypes
+                var serviceDescriptor = assembly.DefinedTypes
                     .Where(s =>
                         s.IsAssignableTo(typeof(IRepository)) &&
                         s.Name.EndsWith("Repository") &&
@@ -89,8 +95,9 @@ public static class DependencyInjection
     }
 
     public static IServiceCollection AddCosmosDbRepositories(
-        this IServiceCollection serviceCollection, 
-        Action<CosmosDbOptions> options)
+        this IServiceCollection serviceCollection,
+        Action<CosmosDbOptions> options,
+        Assembly assembly)
     {
         var cosmosDbOptions = new CosmosDbOptions();
         options.Invoke(cosmosDbOptions);
@@ -103,7 +110,7 @@ public static class DependencyInjection
                 options.ConnectionString = cosmosDb.ConnectionString;
                 options.Credential = cosmosDb.Credential;
                 options.Databases = cosmosDb.Databases;
-            });                
+            }, assembly);
         }
         return serviceCollection;
     }
